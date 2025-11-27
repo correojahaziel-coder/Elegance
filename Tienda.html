@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELEGANCE - Tienda Premium</title>
+    <link rel="stylesheet" href="tienda.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">ELEGANCE</div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+            <nav id="mainNav">
+                <button class="nav-btn active" onclick="cambiarSeccion('ropas', event)">
+                    Ropas
+                </button>
+                <button class="nav-btn" onclick="cambiarSeccion('accesorios', event)">
+                    Accesorios
+                </button>
+                <button class="nav-btn" onclick="cambiarSeccion('carrito', event)">
+                    🛒 Carrito
+                    <span class="cart-badge hidden" id="cartBadge">0</span>
+                </button>
+                <!-- WHATSAPP AL LADO DEL CARRITO -->
+<div class="whatsapp-header">
+    <a href="https://wa.me/51955553062?text=Hola%20quisiera%20hacer%20una%20consulta"
+       target="_blank">📞 Atención Elegance</a>
+</div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div id="seccion-ropas" class="seccion">
+            <h1>Ropas</h1>
+            <div class="products-grid" id="ropasGrid"></div>
+        </div>
+
+        <div id="seccion-accesorios" class="seccion hidden">
+            <h1>Accesorios</h1>
+            <div class="products-grid" id="accesoriosGrid"></div>
+        </div>
+
+        <div id="seccion-carrito" class="seccion hidden">
+            <h1>Carrito de Compras</h1>
+            <div id="carritoContenido"></div>
+        </div>
+    </main>
+
+    <script>
+        var productos = {
+            ropas: [
+                { id: 1, nombre: 'Vestido Verano', precio: 89.99, imagen: 'https://i.pinimg.com/736x/e0/60/07/e06007eba7fcb9ce3ee4acb520dfc086.jpg' },
+                { id: 2, nombre: 'Polos Waffles', precio: 54.99, imagen: 'https://i.pinimg.com/736x/4f/40/6b/4f406baf543611b0dcad007ccf197d68.jpg' },
+                { id: 3, nombre: 'Pantalón Volsilleros', precio: 69.99, imagen: 'https://i.pinimg.com/736x/42/9c/e8/429ce897ccbaa3efc122d47ab18eebe5.jpg' },
+                { id: 4, nombre: 'Polera', precio: 129.99, imagen: 'https://i.pinimg.com/736x/d3/96/ba/d396baba4e3b5595c33cfaf37aadc210.jpg' },
+                { id: 5, nombre: 'Pantalones bodoque', precio: 49.99, imagen: 'https://i.pinimg.com/1200x/a7/df/c5/a7dfc527cf7a422277cdd40cbf3485cb.jpg' },
+                { id: 6, nombre: 'polo princess', precio: 94.99, imagen: 'https://i.pinimg.com/1200x/39/e1/96/39e196e38b9849ac740c0adc17fa08cb.jpg' }
+            ],
+            accesorios: [
+                { id: 7, nombre: 'Bolso de Cuero', precio: 149.99, imagen: 'https://i.pinimg.com/1200x/5a/ce/99/5ace99f9529f4b562a3cbf515010496e.jpg' },
+                { id: 8, nombre: 'Reloj Elegante', precio: 199.99, imagen: 'https://i.pinimg.com/1200x/81/de/df/81dedf3394bac288eb6ef754ef10206c.jpg' },
+                { id: 9, nombre: 'Anillo de Piedra preciosa', precio: 79.99, imagen: 'https://i.pinimg.com/1200x/30/81/d7/3081d79b3233545694c029bf751ddb42.jpg' },
+                { id: 10, nombre: 'Kawasaki Model Scale', precio: 44.99, imagen: 'https://i.pinimg.com/1200x/9f/bf/ae/9fbfaeb761132a08fa6aaae505bc30da.jpg' },
+                { id: 11, nombre: 'Camaro Colection Scale', precio: 59.99, imagen: 'https://i.pinimg.com/736x/6f/db/0b/6fdb0bb5e21420aad38ba207c0902cde.jpg' },
+                { id: 12, nombre: 'Collar Princess', precio: 84.99, imagen: 'https://i.pinimg.com/736x/3a/88/6c/3a886ceb0509a19831888eb48a4303cf.jpg' }
+            ]
+        };
+
+        var carrito = [];
+        var seccionActual = 'ropas';
+
+        function inicializarTienda() {
+            renderizarProductos('ropas', 'ropasGrid');
+            renderizarProductos('accesorios', 'accesoriosGrid');
+            actualizarCarrito();
+        }
+
+        function renderizarProductos(categoria, containerId) {
+            var container = document.getElementById(containerId);
+            var html = '';
+            
+            productos[categoria].forEach(function(producto) {
+                html += '<div class="product-card">' +
+                    '<img src="' + producto.imagen + '" alt="' + producto.nombre + '" class="product-image">' +
+                    '<div class="product-info">' +
+                        '<div class="product-name">' + producto.nombre + '</div>' +
+                        '<div class="product-footer">' +
+                            '<div class="product-price">$' + producto.precio.toFixed(2) + '</div>' +
+                            '<button class="add-to-cart-btn" onclick="agregarAlCarrito(' + producto.id + ', \'' + categoria + '\')">Agregar</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function agregarAlCarrito(id, categoria) {
+            var producto = null;
+            for (var i = 0; i < productos[categoria].length; i++) {
+                if (productos[categoria][i].id === id) {
+                    producto = productos[categoria][i];
+                    break;
+                }
+            }
+            
+            var itemExistente = null;
+            for (var i = 0; i < carrito.length; i++) {
+                if (carrito[i].id === id) {
+                    itemExistente = carrito[i];
+                    break;
+                }
+            }
+
+            if (itemExistente) {
+                itemExistente.cantidad++;
+            } else {
+                carrito.push({
+                    id: producto.id,
+                    nombre: producto.nombre,
+                    precio: producto.precio,
+                    imagen: producto.imagen,
+                    cantidad: 1
+                });
+            }
+
+            actualizarCarrito();
+            mostrarNotificacion('Producto agregado al carrito');
+        }
+
+        function actualizarCarrito() {
+            var cantidadTotal = 0;
+            for (var i = 0; i < carrito.length; i++) {
+                cantidadTotal += carrito[i].cantidad;
+            }
+            
+            var badge = document.getElementById('cartBadge');
+            
+            if (cantidadTotal > 0) {
+                badge.textContent = cantidadTotal;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            renderizarCarrito();
+        }
+
+        function renderizarCarrito() {
+            var container = document.getElementById('carritoContenido');
+
+            if (carrito.length === 0) {
+                container.innerHTML = '<div class="empty-cart">' +
+                    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>' +
+                    '</svg>' +
+                    '<p>Tu carrito está vacío</p>' +
+                    '<button class="checkout-btn" onclick="cambiarSeccion(\'ropas\', event)">Comenzar a Comprar</button>' +
+                '</div>';
+            } else {
+                var total = 0;
+                for (var i = 0; i < carrito.length; i++) {
+                    total += carrito[i].precio * carrito[i].cantidad;
+                }
+                
+                var html = '<div class="cart-items">';
+                
+                for (var i = 0; i < carrito.length; i++) {
+                    var item = carrito[i];
+                    html += '<div class="cart-item">' +
+                        '<img src="' + item.imagen + '" alt="' + item.nombre + '" class="cart-item-image">' +
+                        '<div class="cart-item-info">' +
+                            '<div class="cart-item-name">' + item.nombre + '</div>' +
+                            '<div class="cart-item-price">$' + item.precio.toFixed(2) + '</div>' +
+                        '</div>' +
+                        '<div class="quantity-controls">' +
+                            '<button class="quantity-btn" onclick="actualizarCantidad(' + item.id + ', ' + (item.cantidad - 1) + ')">-</button>' +
+                            '<span class="quantity-display">' + item.cantidad + '</span>' +
+                            '<button class="quantity-btn" onclick="actualizarCantidad(' + item.id + ', ' + (item.cantidad + 1) + ')">+</button>' +
+                        '</div>' +
+                        '<button class="remove-btn" onclick="eliminarDelCarrito(' + item.id + ')">Eliminar</button>' +
+                    '</div>';
+                }
+                
+                html += '</div>' +
+                    '<div class="cart-total">' +
+                        '<div class="total-row">' +
+                            '<span>Total:</span>' +
+                            '<span class="total-amount">$' + total.toFixed(2) + '</span>' +
+                        '</div>' +
+                        '<button class="checkout-btn" onclick="procesarPago()">Proceder al Pago</button>' +
+                    '</div>';
+                
+                container.innerHTML = html;
+            }
+        }
+
+        function actualizarCantidad(id, nuevaCantidad) {
+            if (nuevaCantidad <= 0) {
+                eliminarDelCarrito(id);
+            } else {
+                for (var i = 0; i < carrito.length; i++) {
+                    if (carrito[i].id === id) {
+                        carrito[i].cantidad = nuevaCantidad;
+                        break;
+                    }
+                }
+                actualizarCarrito();
+            }
+        }
+
+        function eliminarDelCarrito(id) {
+            var nuevoCarrito = [];
+            for (var i = 0; i < carrito.length; i++) {
+                if (carrito[i].id !== id) {
+                    nuevoCarrito.push(carrito[i]);
+                }
+            }
+            carrito = nuevoCarrito;
+            actualizarCarrito();
+        }
+
+        function cambiarSeccion(seccion, event) {
+            var secciones = document.querySelectorAll('.seccion');
+            for (var i = 0; i < secciones.length; i++) {
+                secciones[i].classList.add('hidden');
+            }
+            document.getElementById('seccion-' + seccion).classList.remove('hidden');
+
+            var botones = document.querySelectorAll('.nav-btn');
+            for (var i = 0; i < botones.length; i++) {
+                botones[i].classList.remove('active');
+            }
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+
+            seccionActual = seccion;
+            document.getElementById('mainNav').classList.remove('mobile-open');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mainNav').classList.toggle('mobile-open');
+        }
+
+        function procesarPago() {
+    var container = document.getElementById('carritoContenido');
+
+    if (carrito.length === 0) {
+        mostrarNotificacion("Tu carrito está vacío");
+        return;
+    }
+
+    var total = 0;
+    for (var i = 0; i < carrito.length; i++) {
+        total += carrito[i].precio * carrito[i].cantidad;
+    }
+
+    container.innerHTML = `
+        <div class="pago-wrapper">
+            <div class="resumen-pago">
+                <h2>Resumen de Compra</h2>
+                <p class="pago-total">Total: <strong>$${total.toFixed(2)}</strong></p>
+            </div>
+
+            <div class="metodos-pago">
+                <h2>Formas de Pago</h2>
+
+                <label class="pago-opcion">
+                    <input type="radio" name="pago" value="Visa"> 
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg">
+                    Visa
+                </label>
+
+                <label class="pago-opcion">
+                    <input type="radio" name="pago" value="Mastercard">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg">
+                    Mastercard
+                </label>
+
+                <label class="pago-opcion">
+                    <input type="radio" name="pago" value="AMEX">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo_%282018%29.svg">
+                    American Express
+                </label>
+
+                <label class="pago-opcion">
+                    <input type="radio" name="pago" value="Maestro">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Maestro_2016.svg">
+                    Maestro
+                </label>
+
+                <label class="pago-opcion">
+                    <input type="radio" name="pago" value="PayPal">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/PayPal.svg">
+                    PayPal
+                </label>
+
+                <label class="pago-opcion">
+                    <input type="radio" name="pago" value="Transferencia">
+                    🔄 Transferencia
+                </label>
+
+                <button class="confirmar-pago-btn" onclick="finalizarPago()">Confirmar Pago</button>
+            </div>
+        </div>
+    `;
+}
+        function finalizarPago() {
+            var seleccionado = document.querySelector('input[name="pago"]:checked');
+            if (!seleccionado) {
+            mostrarNotificacion("Selecciona un método de pago");
+            return;
+    }
+
+    mostrarNotificacion("Pago realizado con " + seleccionado.value);
+    carrito = [];
+    actualizarCarrito();
+}
+
+        function mostrarNotificacion(mensaje) {
+            var notif = document.createElement('div');
+            notif.textContent = mensaje;
+            notif.style.cssText = 'position: fixed; top: 100px; right: 20px; background: #10b981; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 9999;';
+            document.body.appendChild(notif);
+            setTimeout(function() {
+                notif.remove();
+            }, 2000);
+        }
+
+        window.onload = inicializarTienda;
+    </script>
+    <!-- BOTÓN FLOTANTE DE WHATSAPP -->
+<a href="https://wa.me/51955553062?text=Hola%20vengo%20de%20la%20tienda%20Elegance"
+   class="whatsapp-floating" target="_blank">
+    💬
+</a>
+</body>
+</html>
